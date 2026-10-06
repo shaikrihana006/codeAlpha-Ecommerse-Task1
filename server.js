@@ -1,131 +1,115 @@
 const express = require("express");
-const session = require("express-session");
-const bcrypt = require("bcryptjs");
 const path = require("path");
 
 const db = require("./database");
 
 const app = express();
-
 const PORT = 3000;
 
-// =====================================
-// MIDDLEWARE
-// =====================================
-
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(
-    session({
-        secret: "codealpha-ecommerce-secret",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 24
-        }
-    })
-);
 
 // Serve frontend files
 app.use(express.static(path.join(__dirname, "public")));
 
-// =====================================
-// AUTHENTICATION MIDDLEWARE
-// =====================================
+// Home page
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
-function requireLogin(req, res, next) {
-
-    if (!req.session.user) {
-        return res.status(401).json({
-            message: "Please login first."
-        });
-    }
-
-    next();
-}
-
-// =====================================
-// PRODUCT API
-// =====================================
+// =========================
+// PRODUCTS API
+// =========================
 
 // Get all products
 app.get("/api/products", (req, res) => {
 
-    const products = db
-        .prepare("SELECT * FROM products ORDER BY id DESC")
-        .all();
+    try {
 
-    res.json(products);
+        const products = db
+            .prepare("SELECT * FROM products ORDER BY id DESC")
+            .all();
+
+        res.json(products);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Error loading products"
+        });
+    }
 });
 
 // Get single product
 app.get("/api/products/:id", (req, res) => {
 
-    const product = db
-        .prepare("SELECT * FROM products WHERE id = ?")
-        .get(req.params.id);
+    try {
 
-    if (!product) {
-        return res.status(404).json({
-            message: "Product not found."
+        const product = db
+            .prepare("SELECT * FROM products WHERE id = ?")
+            .get(req.params.id);
+
+        if (!product) {
+
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        res.json(product);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Error loading product"
+        });
+    }
+});
+
+// =========================
+// USER REGISTER
+// =========================
+
+app.post("/api/register", (req, res) => {
+
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+
+        return res.status(400).json({
+            message: "Please fill all fields"
         });
     }
 
-    res.json(product);
-});
-
-// =====================================
-// REGISTER
-// =====================================
-
-app.post("/api/auth/register", async (req, res) => {
-
     try {
-
-        const { name, email, password } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                message: "All fields are required."
-            });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({
-                message: "Password must contain at least 6 characters."
-            });
-        }
 
         const existingUser = db
             .prepare("SELECT * FROM users WHERE email = ?")
             .get(email);
 
         if (existingUser) {
+
             return res.status(400).json({
-                message: "Email already registered."
+                message: "Email already registered"
             });
         }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
 
         const result = db
             .prepare(`
-                INSERT INTO users
-                (name, email, password)
+                INSERT INTO users (name, email, password)
                 VALUES (?, ?, ?)
             `)
-            .run(name, email, hashedPassword);
-
-        req.session.user = {
-            id: result.lastInsertRowid,
-            name,
-            email
-        };
+            .run(name, email, password);
 
         res.json({
-            message: "Registration successful.",
-            user: req.session.user
+            success: true,
+            message: "Registration successful",
+            userId: result.lastInsertRowid
         });
 
     } catch (error) {
@@ -133,240 +117,295 @@ app.post("/api/auth/register", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-            message: "Server error."
+            message: "Registration failed"
         });
     }
 });
 
-// =====================================
-// LOGIN
-// =====================================
+// =========================
+// USER LOGIN
+// =========================
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/login", (req, res) => {
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+
+        return res.status(400).json({
+            message: "Please enter email and password"
+        });
+    }
 
     try {
-
-        const { email, password } = req.body;
 
         const user = db
-            .prepare("SELECT * FROM users WHERE email = ?")
-            .get(email);
+            .prepare(`
+                SELECT id, name, email
+                FROM users
+                WHERE email = ? AND password = ?
+            `)
+            .get(email, password);
 
         if (!user) {
+
             return res.status(401).json({
-                message: "Invalid email or password."
+                message: "Invalid email or password"
             });
         }
-
-        const passwordMatch = await bcrypt.compare(
-            password,
-            user.password
-        );
-
-        if (!passwordMatch) {
-            return res.status(401).json({
-                message: "Invalid email or password."
-            });
-        }
-
-        req.session.user = {
-            id: user.id,
-            name: user.name,
-            email: user.email
-        };
 
         res.json({
-            message: "Login successful.",
-            user: req.session.user
+            success: true,
+            message: "Login successful",
+            user
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error(error);<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Shop - CodeAlpha Store</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <div class="logo">
+            CodeAlpha Store
+        </div>
+
+        <nav class="navbar">
+
+            <a href="index.html">Home</a>
+
+            <a href="shop.html" class="active">Shop</a>
+
+            <a href="cart.html">
+                Cart 🛒
+                <span id="cart-count">0</span>
+            </a>
+
+            <a href="login.html">Login</a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- ================= SHOP SECTION ================= -->
+
+    <main>
+
+        <section class="shop-section">
+
+            <h1>Our Products</h1>
+
+            <p class="shop-description">
+                Explore our latest products and find what you need.
+            </p>
+
+
+            <!-- Search -->
+
+            <div class="shop-controls">
+
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search products..."
+                >
+
+                <select id="category-filter">
+
+                    <option value="all">
+                        All Products
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Products -->
+
+            <div
+                id="products-container"
+                class="products-container"
+            >
+
+                <!-- Products will be loaded using JavaScript -->
+
+                <p>Loading products...</p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        <p>
+            © 2026 CodeAlpha Store. All Rights Reserved.
+        </p>
+
+    </footer>
+
+
+    <!-- JavaScript -->
+
+    <script src="js/app.js"></script>
+
+    <script src="js/products.js"></script>
+
+    <script src="js/cart.js"></script>
+
+</body>
+
+</html>
 
         res.status(500).json({
-            message: "Server error."
+            message: "Login failed"
         });
     }
 });
 
-// =====================================
-// CURRENT USER
-// =====================================
-
-app.get("/api/auth/me", (req, res) => {
-
-    if (!req.session.user) {
-        return res.status(401).json({
-            message: "Not logged in."
-        });
-    }
-
-    res.json(req.session.user);
-});
-
-// =====================================
-// LOGOUT
-// =====================================
-
-app.post("/api/auth/logout", (req, res) => {
-
-    req.session.destroy(() => {
-
-        res.json({
-            message: "Logout successful."
-        });
-
-    });
-});
-
-// =====================================
-// CREATE ORDER
-// =====================================
-
-app.post("/api/orders", requireLogin, (req, res) => {
-
-    try {
-
-        const { items } = req.body;
-
-        if (!items || items.length === 0) {
-            return res.status(400).json({
-                message: "Cart is empty."
-            });
-        }
-
-        let total = 0;
-        const orderItems = [];
-
-        // Check products and calculate total
-        for (const item of items) {
-
-            const product = db
-                .prepare("SELECT * FROM products WHERE id = ?")
-                .get(item.productId);
-
-            if (!product) {
-                return res.status(400).json({
-                    message: "Product not found."
-                });
-            }
-
-            if (item.quantity <= 0) {
-                return res.status(400).json({
-                    message: "Invalid quantity."
-                });
-            }
-
-            if (product.stock < item.quantity) {
-                return res.status(400).json({
-                    message:
-                        `${product.name} does not have enough stock.`
-                });
-            }
-
-            total += product.price * item.quantity;
-
-            orderItems.push({
-                productId: product.id,
-                quantity: item.quantity,
-                price: product.price
-            });
-        }
-
-        // Create order
-        const orderResult = db
-            .prepare(`
-                INSERT INTO orders
-                (user_id, total, status)
-                VALUES (?, ?, ?)
-            `)
-            .run(
-                req.session.user.id,
-                total,
-                "Pending"
-            );
-
-        const orderId = orderResult.lastInsertRowid;
-
-        // Insert order items
-        const insertItem = db.prepare(`
-            INSERT INTO order_items
-            (order_id, product_id, quantity, price)
-            VALUES (?, ?, ?, ?)
-        `);
-
-        const updateStock = db.prepare(`
-            UPDATE products
-            SET stock = stock - ?
-            WHERE id = ?
-        `);
-
-        for (const item of orderItems) {
-
-            insertItem.run(
-                orderId,
-                item.productId,
-                item.quantity,
-                item.price
-            );
-
-            updateStock.run(
-                item.quantity,
-                item.productId
-            );
-        }
-
-        res.json({
-            message: "Order placed successfully.",
-            orderId,
-            total
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            message: "Could not place order."
-        });
-    }
-});
-
-// =====================================
-// GET USER ORDERS
-// =====================================
-
-app.get("/api/orders", requireLogin, (req, res) => {
-
-    const orders = db
-        .prepare(`
-            SELECT *
-            FROM orders
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-        `)
-        .all(req.session.user.id);
-
-    res.json(orders);
-});
-
-// =====================================
+// =========================
 // START SERVER
-// =====================================
+// =========================
 
 app.listen(PORT, () => {
 
-    console.log(`
-========================================
-   CODEALPHA E-COMMERCE STORE
-========================================
+    console.log(`Server running at http://localhost:${PORT}`);
 
-Server running at:
+});<!DOCTYPE html>
+<html lang="en">
 
-http://localhost:${PORT}
+<head>
+    <meta charset="UTF-8">
 
-========================================
-    `);
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-});
+    <title>Shop - CodeAlpha Store</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <div class="logo">
+            CodeAlpha Store
+        </div>
+
+        <nav class="navbar">
+
+            <a href="index.html">Home</a>
+
+            <a href="shop.html" class="active">Shop</a>
+
+            <a href="cart.html">
+                Cart 🛒
+                <span id="cart-count">0</span>
+            </a>
+
+            <a href="login.html">Login</a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- ================= SHOP SECTION ================= -->
+
+    <main>
+
+        <section class="shop-section">
+
+            <h1>Our Products</h1>
+
+            <p class="shop-description">
+                Explore our latest products and find what you need.
+            </p>
+
+
+            <!-- Search -->
+
+            <div class="shop-controls">
+
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search products..."
+                >
+
+                <select id="category-filter">
+
+                    <option value="all">
+                        All Products
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Products -->
+
+            <div
+                id="products-container"
+                class="products-container"
+            >
+
+                <!-- Products will be loaded using JavaScript -->
+
+                <p>Loading products...</p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        <p>
+            © 2026 CodeAlpha Store. All Rights Reserved.
+        </p>
+
+    </footer>
+
+
+    <!-- JavaScript -->
+
+    <script src="js/app.js"></script>
+
+    <script src="js/products.js"></script>
+
+    <script src="js/cart.js"></script>
+
+</body>
+
+</html>

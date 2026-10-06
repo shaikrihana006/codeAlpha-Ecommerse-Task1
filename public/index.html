@@ -1,105 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>ShopEase - Online Store</title>
 
-    <title>ShopEase - E-Commerce Store</title>
-
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
-
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
+    <!-- ================= NAVBAR ================= -->
 
     <header class="navbar">
 
         <div class="logo">
-            ShopEase
+            Shop<span>Ease</span>
         </div>
 
         <nav>
+            <a href="index.html">Home</a>
+            <a href="shop.html">Shop</a>
+            <a href="shop.html">Categories</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
 
-            <a href="index.html">
-                Home
+        <div class="nav-actions">
+
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search products..."
+                >
+                <button onclick="searchProducts()">🔍</button>
+            </div>
+
+            <a href="login.html" class="nav-icon">♡</a>
+
+            <a href="cart.html" class="nav-icon">
+                🛒 <span id="cartCount">0</span>
             </a>
 
-            <a href="cart.html">
-                Cart
-                (<span id="cartCount">0</span>)
-            </a>
-
-            <a href="login.html">
+            <a href="login.html" class="login-btn">
                 Login
             </a>
 
-            <a href="register.html">
-                Register
-            </a>
-
-        </nav>
+        </div>
 
     </header>
 
 
-    <!-- HERO SECTION -->
+    <!-- ================= HERO SECTION ================= -->
 
     <section class="hero">
 
-        <h1>
-            Welcome to ShopEase
-        </h1>
+        <div class="hero-content">
 
-        <p>
-            Find the best products at affordable prices.
-        </p>
+            <p class="hero-small">
+                NEW COLLECTION 2026
+            </p>
 
-        <a href="#products" class="btn">
-            Shop Now
-        </a>
+            <h1>
+                Upgrade<br>
+                Your <span>Style</span>
+            </h1>
+
+            <p>
+                Discover the latest products at amazing prices.
+                Shop electronics, fashion, footwear and more.
+            </p>
+
+            <a href="shop.html" class="shop-btn">
+                Shop Now →
+            </a>
+
+        </div>
+
+        <div class="hero-image">
+
+            <img
+                src="images/smartphone.jpg"
+                alt="Featured Product"
+            >
+
+        </div>
 
     </section>
 
 
-    <!-- PRODUCTS -->
+    <!-- ================= CATEGORIES ================= -->
 
-    <main class="container">
+    <section class="categories">
 
-        <h2 id="products">
-            Our Products
-        </h2>
+        <div class="section-heading">
 
-        <div
-            id="productList"
-            class="product-grid"
-        >
+            <div>
+                <p>EXPLORE</p>
+                <h2>Shop by Category</h2>
+            </div>
+
+            <a href="shop.html">
+                View All →
+            </a>
+
         </div>
 
-    </main>
 
+        <div class="category-grid">
+
+            <a href="shop.html?category=Electronics"
+               class="category-card">
+
+                <div class="category-icon">📱</div>
+
+                <h3>Electronics</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+
+            <a href="shop.html?category=Fashion"
+               class="category-card">
+
+                <div class="category-icon">👕</div>
+
+                <h3>Fashion</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+
+            <a href="shop.html?category=Footwear"
+               class="category-card">
+
+                <div class="category-icon">👟</div>
+
+                <h3>Footwear</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+
+            <a href="shop.html?category=Bags"
+               class="category-card">
+
+                <div class="category-icon">🎒</div>
+
+                <h3>Bags</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+
+            <a href="shop.html?category=Home%20%26%20Living"
+               class="category-card">
+
+                <div class="category-icon">🏠</div>
+
+                <h3>Home & Living</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+
+            <a href="shop.html?category=Accessories"
+               class="category-card">
+
+                <div class="category-icon">⌚</div>
+
+                <h3>Accessories</h3>
+
+                <p>10 Products</p>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= FEATURED PRODUCTS ================= -->
+
+    <section class="featured">
+
+        <div class="section-heading">
+
+            <div>
+                <p>OUR PICKS</p>
+                <h2>Featured Products</h2>
+            </div>
+
+            <a href="shop.html">
+                View All →
+            </a>
+
+        </div>
+
+
+        <div
+            id="featuredProducts"
+            class="product-grid"
+        >
+
+            <p>Loading products...</p>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= ABOUT ================= -->
+
+    <section id="about" class="about-section">
+
+        <div>
+
+            <p>ABOUT US</p>
+
+            <h2>
+                Everything you need,
+                all in one place.
+            </h2>
+
+            <p>
+                ShopEase is a simple online shopping platform
+                designed to make shopping easy, convenient
+                and enjoyable.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CONTACT ================= -->
+
+    <section id="contact" class="contact-section">
+
+        <h2>Get in Touch</h2>
+
+        <p>
+            Have questions? We'd love to hear from you.
+        </p>
+
+        <p>
+            📧 support@shopease.com
+        </p>
+
+    </section>
+
+
+    <!-- ================= FOOTER ================= -->
 
     <footer>
 
+        <div class="logo">
+            Shop<span>Ease</span>
+        </div>
+
         <p>
-            © 2026 ShopEase | CodeAlpha Full Stack Project
+            © 2026 ShopEase. All rights reserved.
         </p>
 
     </footer>
 
 
+    <!-- JAVASCRIPT -->
+
     <script src="js/app.js"></script>
 
 </body>
-
 </html>
